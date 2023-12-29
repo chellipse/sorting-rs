@@ -57,37 +57,12 @@ fn main() {
     let len = nums_1.len();
 
 
-    println!("\nMERGE SORT");
     println!("Vec Len: {}", len);
+    println!("Sorting...");
     let time_b = std::time::Instant::now();
 
     merge_sort(&mut nums_1);
 
     let mark_fast = time_b.elapsed().as_millis();
-    println!("{} ms", mark_fast);
-
-
-    println!("\nMERGE VAL:");
-    let len = len;
-    for i in 0..len {
-        if i == len - 1 {break}
-        match nums_1[i].partial_cmp(&nums_1[i + 1]) {
-            Some(Ordering::Greater) => print!("1:X"),
-            Some(Ordering::Less) => print!(""),
-            Some(Ordering::Equal) => print!("="),
-            _ => {},
-        }
-    }
-
-    // Size of a single element
-    let size_el = std::mem::size_of::<f64>();
-
-    // Total size of all elements
-    // let total_size = size_el * len;
-
-    // Total allocated capacity (in bytes)
-    let allocated_size = size_el * nums_1.capacity();
-
-    println!("Elements per ms: {}", len as f64 / mark_fast as f64);
-    println!("KB:{}", allocated_size / 1000);
+    println!("sorted in {} ms.", mark_fast);
 }
