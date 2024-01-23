@@ -101,25 +101,20 @@ macro_rules! make_float_sort_func {
                     },
                     _ => {
                         if slice[i].is_nan() {
+                            nan_count += 1;
                             i += 1;
                         }
                         if slice[j].is_nan() {
+                            nan_count += 1;
                             j += 1;
                         }
                     }
                 }
             }
-            for _ in 0..=nan_count {
+            for _ in 1..=nan_count {
                 result.push(std::$type::NAN);
             }
-            // println!("NAN: {:?}", nan_count);
-            // println!("RES: {:?}", result);
-            println!("{}", slice.len());
-            println!("{}", result.len());
             for (index, element) in result.into_iter().enumerate() {
-                // println!("{element}");
-                // println!("{}", slice.len());
-                // println!("{}", index);
                 slice[index] = element;
             }
         }
@@ -150,6 +145,13 @@ impl_merge_for_type!(u16);
 impl_merge_for_type!(u32);
 impl_merge_for_type!(u64);
 impl_merge_for_type!(u128);
+
+// signed
+impl_merge_for_type!(i8);
+impl_merge_for_type!(i16);
+impl_merge_for_type!(i32);
+impl_merge_for_type!(i64);
+impl_merge_for_type!(i128);
 
 // floating point
 impl Sortable for &mut Vec<f32> {
