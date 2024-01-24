@@ -1,5 +1,7 @@
 use std::cmp::Ordering;
 
+// func for types which can be purely compared
+// ie comparisons must result in one of: <, >, or ==
 fn merge_sort_ord<T: Ord + Copy>(slice: &mut [T]){
     let len = slice.len();
     // stops endless recursive calls
@@ -19,20 +21,23 @@ fn merge_sort_ord<T: Ord + Copy>(slice: &mut [T]){
     let mut y = 0;
     let mut x = mid;
     loop {
-        // break if there are no elements left to sort
-        if y >= mid && x >= len {break}
         // if x is depleated of elements, push remaining from y
         if x >= len {
-            result.push(slice[y]);
-            y += 1;
-            continue;
+            while y < mid {
+                result.push(slice[y]);
+                y += 1;
+            }
+            break
         }
         // if y is depleated of elements, push remaining from x
         if y >= mid {
-            result.push(slice[x]);
-            x += 1;
-            continue;
+            while x < mid {
+                result.push(slice[x]);
+                x += 1;
+            }
+            break
         }
+        // push value based on comparison
         match slice[y].cmp(&slice[x]) {
             Ordering::Greater => {
                 result.push(slice[x]);
@@ -48,6 +53,7 @@ fn merge_sort_ord<T: Ord + Copy>(slice: &mut [T]){
             },
         }
     }
+    // overwrite original vec
     for (i, e) in result.into_iter().enumerate() {
         slice[i] = e;
     }
@@ -60,8 +66,10 @@ macro_rules! make_float_sort_func {
     ($func_name:ident, $type:ident) => {
         fn $func_name(slice: &mut [$type]) {
             let len = slice.len();
+            // stops endless recursive calls
             if len <= 1 {return}
 
+            // split our slice *evenly and recursively call
             let mid = len / 2;
             {
                 let (first_half, second_half) = slice.split_at_mut(mid);
@@ -69,58 +77,69 @@ macro_rules! make_float_sort_func {
                 $func_name(second_half);
             }
 
-            let mut i = 0;
-            let mut j = mid;
+            // vec to store our sorted list before overwriting the original
             let mut result = vec![];
+            // variables to track as we iterate
+            let mut y = 0;
+            let mut x = mid;
+            // count for NaN values
             let mut nan_count = 0;
             loop {
-                if !(i < mid) && !(j < len) {break}
-                if !(j < len) {
-                    if slice[i].is_nan() {
-                        nan_count += 1;
-                    } else {
-                        result.push(slice[i]);
+                // if x is depleated of elements, push remaining from y
+                if x >= len {
+                    while y < mid {
+                        if slice[y].is_nan() {
+                            nan_count += 1;
+                        } else {
+                            result.push(slice[y]);
+                        }
+                        y += 1;
                     }
-                    i += 1;
-                    continue;
+                    break
                 }
-                if !(i < mid) {
-                    if slice[j].is_nan() {
-                        nan_count += 1;
-                    } else {
-                        result.push(slice[j]);
+                // if y is depleated of elements, push remaining from x
+                if y >= mid {
+                    while x < mid {
+                        if slice[x].is_nan() {
+                            nan_count += 1;
+                        } else {
+                            result.push(slice[x]);
+                        }
+                        x += 1;
                     }
-                    j += 1;
-                    continue;
+                    break
                 }
-                match slice[i].partial_cmp(&slice[j]) {
+                // push value based on comparison
+                match slice[y].partial_cmp(&slice[x]) {
                     Some(Ordering::Greater) => {
-                        result.push(slice[j]);
-                        j += 1;
+                        result.push(slice[x]);
+                        x += 1;
                     },
                     Some(Ordering::Less) => {
-                        result.push(slice[i]);
-                        i += 1;
+                        result.push(slice[y]);
+                        y += 1;
                     },
                     Some(Ordering::Equal) => {
-                        result.push(slice[i]);
-                        i += 1;
+                        result.push(slice[y]);
+                        y += 1;
                     },
-                    _ => {
-                        if slice[i].is_nan() {
+                    _ => { // increment NaN count for each NaN
+                        if slice[y].is_nan() {
                             nan_count += 1;
-                            i += 1;
+                            y += 1;
                         }
-                        if slice[j].is_nan() {
+                        if slice[x].is_nan() {
                             nan_count += 1;
-                            j += 1;
+                            x += 1;
                         }
                     }
                 }
             }
+            // push NaN values to the end of $result
             for _ in 1..=nan_count {
                 result.push(std::$type::NAN);
             }
+            // overwrite original vec
             for (index, element) in result.into_iter().enumerate() {
                 slice[index] = element;
             }
@@ -128,6 +147,7 @@ macro_rules! make_float_sort_func {
     }
 }
 
+// trait which enables method use
 pub trait Sortable {
     fn sort_merge(&mut self);
 }
@@ -136,6 +156,8 @@ pub trait Sortable {
 make_float_sort_func!(merge_sort_f32, f32);
 make_float_sort_func!(merge_sort_f64, f64);
 
+// create a implementation purely comparable types
+// cc: merge_sort_ord comment
 macro_rules! impl_merge_for_type {
     ($type:ident) => {
         impl Sortable for &mut Vec<$type> {
@@ -160,13 +182,14 @@ impl_merge_for_type!(i32);
 impl_merge_for_type!(i64);
 impl_merge_for_type!(i128);
 
-// floating point
+// impl method for f32
 impl Sortable for &mut Vec<f32> {
     fn sort_merge(&mut self) {
         merge_sort_f32(self)
     }
 }
 
+// impl method for f32
 impl Sortable for &mut Vec<f64> {
     fn sort_merge(&mut self) {
         merge_sort_f64(self)
