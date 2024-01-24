@@ -2,8 +2,10 @@ use std::cmp::Ordering;
 
 fn merge_sort_ord<T: Ord + Copy>(slice: &mut [T]){
     let len = slice.len();
+    // stops endless recursive calls
     if len <= 1 {return}
 
+    // split our slice *evenly and recursively call
     let mid = len / 2;
     {
         let (first_half, second_half) = slice.split_at_mut(mid);
@@ -11,38 +13,43 @@ fn merge_sort_ord<T: Ord + Copy>(slice: &mut [T]){
         merge_sort_ord(second_half);
     }
 
-    let mut i = 0;
-    let mut j = mid;
+    // vec to store our sorted list before overwriting the original
     let mut result = vec![];
+    // variables to track as we iterate
+    let mut y = 0;
+    let mut x = mid;
     loop {
-        if !(i < mid) && !(j < len) {break}
-        if !(j < len) {
-            result.push(slice[i]);
-            i += 1;
+        // break if there are no elements left to sort
+        if y >= mid && x >= len {break}
+        // if x is depleated of elements, push remaining from y
+        if x >= len {
+            result.push(slice[y]);
+            y += 1;
             continue;
         }
-        if !(i < mid) {
-            result.push(slice[j]);
-            j += 1;
+        // if y is depleated of elements, push remaining from x
+        if y >= mid {
+            result.push(slice[x]);
+            x += 1;
             continue;
         }
-        match slice[i].cmp(&slice[j]) {
+        match slice[y].cmp(&slice[x]) {
             Ordering::Greater => {
-                result.push(slice[j]);
-                j += 1;
+                result.push(slice[x]);
+                x += 1;
             },
             Ordering::Less => {
-                result.push(slice[i]);
-                i += 1;
+                result.push(slice[y]);
+                y += 1;
             },
             Ordering::Equal => {
-                result.push(slice[i]);
-                i += 1;
+                result.push(slice[y]);
+                y += 1;
             },
         }
     }
-    for (x, i) in result.into_iter().enumerate() {
-        slice[x] = i;
+    for (i, e) in result.into_iter().enumerate() {
+        slice[i] = e;
     }
 }
 

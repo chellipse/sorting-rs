@@ -43,10 +43,10 @@ fn main() {
 
 #[cfg(test)]
 mod tests {
-    // use super::*;
     use rand::Rng; // Trait that provides the random number generation methods
-    use merge::Sortable;
+    use merge::Sortable; // Trait to be tested
 
+    // a macro for producing functions which generate vectors of test data
     macro_rules! make_rand_func {
         ($funcname:ident, $type:ty, $count:expr, $start:expr, $end:expr) => {
             fn $funcname() -> Vec<$type> {
@@ -74,8 +74,29 @@ mod tests {
                     }
                     assert!(data[i] <= data[i+1]);
                 }
-                println!("LEN: {}", data.len());
-                println!("Range: {} - {}", $start, $end);
+            }
+        }
+    }
+
+    // use this one for floats, it will Break if a NaN value is run into
+    // the f32/64 sort_merge() impl will place all NaN values at the end
+    // so breaking when we meet one is ok
+    macro_rules! make_test_float {
+        ($funcname:ident, $type:ty, $start:expr, $end:expr) => {
+            #[test]
+            fn $funcname() {
+                make_rand_func!(make_vec, $type, 1000000, $start, $end);
+                let mut data: Vec<$type> = make_vec();
+                (&mut data).sort_merge();
+                for i in 0..data.len() {
+                    if (i+1) >= data.len() {
+                        break
+                    } else
+                    if data[i+1].is_nan() {
+                        break
+                    }
+                    assert!(data[i] <= data[i+1]);
+                }
             }
         }
     }
@@ -93,6 +114,10 @@ mod tests {
     make_test_ord!(test_i32, i32, -2147483647, 2147483647);
     make_test_ord!(test_i64, i64, -9223372036854775807_i64, 9223372036854775807);
     make_test_ord!(test_i128, i128, -170141183460469231731687303715884105727_i128, 170141183460469231731687303715884105727);
+
+    // float
+    make_test_float!(test_f32, f32, -3201.3452893840, 2339.38981340);
+    make_test_float!(test_f64, f64, -383882.59298482010, 9629482273.3182949581390);
 
     // #[test]
     // fn bench() {
