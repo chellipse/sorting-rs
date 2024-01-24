@@ -67,7 +67,9 @@ mod tests {
             fn $funcname() {
                 make_rand_func!(make_vec, $type, 1000000, $start, $end);
                 let mut data: Vec<$type> = make_vec();
+                let time = std::time::Instant::now();
                 (&mut data).sort_merge();
+                println!("Sort time: {}ms", time.elapsed().as_millis());
                 for i in 0..data.len() {
                     if (i+1) >= data.len() {
                         break
@@ -87,7 +89,9 @@ mod tests {
             fn $funcname() {
                 make_rand_func!(make_vec, $type, 1000000, $start, $end);
                 let mut data: Vec<$type> = make_vec();
+                let time = std::time::Instant::now();
                 (&mut data).sort_merge();
+                println!("Sort time: {}ms", time.elapsed().as_millis());
                 for i in 0..data.len() {
                     if (i+1) >= data.len() {
                         break
